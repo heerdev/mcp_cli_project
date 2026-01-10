@@ -1,14 +1,11 @@
 from typing import Dict, List
 import json
-
-from mcp_client import MCPClient
-from typing import List
+from mcp_client import MCPHttpClient
 from core.types import Message
 from core.tools import ToolManager
 
-
 class Chat:
-    def __init__(self, llm_service, clients: dict[str, MCPClient]):
+    def __init__(self, llm_service, clients: dict[str, MCPHttpClient]):
         self.llm = llm_service
         self.clients = clients
         self.messages: List[Message] = []
@@ -22,7 +19,6 @@ class Chat:
             return
 
         tools = await ToolManager.get_all_tools(self.clients)
-
         system_prompt = f"""
 You are an AI assistant with access to tools.
 
@@ -37,7 +33,6 @@ Do NOT include any extra text.
 Available tools:
 {json.dumps(tools, indent=2)}
 """
-
         self.messages.insert(
             0, {"role": "system", "content": system_prompt.strip()}
         )
@@ -50,25 +45,16 @@ Available tools:
         for _ in range(10):  # safety guard
             response_text = await self.llm.chat(self.messages)
 
-            # Attempt tool call parsing
             try:
                 parsed = json.loads(response_text)
                 if not is_tool_call(parsed):
                     self.messages.append({"role": "assistant", "content": response_text})
                     return response_text
-            
-                if not isinstance(parsed, dict):
-                    raise ValueError
-                tool_name = parsed.get("tool")
-                tool_args = parsed.get("arguments")
-
-                if not tool_name or not isinstance(tool_args, dict):
-                    raise ValueError
+                
+                tool_name = parsed["tool"]
+                tool_args = parsed["arguments"]
             except Exception:
-                # Normal assistant response
-                self.messages.append(
-                    {"role": "assistant", "content": response_text}
-                )
+                self.messages.append({"role": "assistant", "content": response_text})
                 return response_text
 
             # Execute tool
@@ -81,14 +67,15 @@ Available tools:
                 {
                     "role": "user",
                     "content": (
-                        f"TOOL RESULT ({tool_name}):\n"
-                        f"{json.dumps(tool_result, indent=2)}"
+                        f"TOOL RESULT ({tool_name}):\n{json.dumps(tool_result, indent=2)}"
                     ),
                 }
             )
 
-        return "Error: tool execution loop exceeded limit."
-    
+        final_text = "Error: tool execution loop exceeded limit."
+        self.messages.append({"role": "assistant", "content": final_text})
+        return final_text
+
 def is_tool_call(obj):
     return (
         isinstance(obj, dict)

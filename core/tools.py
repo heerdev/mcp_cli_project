@@ -2,12 +2,12 @@ import json
 from typing import Optional
 
 from mcp.types import CallToolResult, Tool, TextContent
-from mcp_client import MCPClient
+from mcp_client import MCPHttpClient
 
 
 class ToolManager:
     @classmethod
-    async def get_all_tools(cls, clients: dict[str, MCPClient]) -> list[Tool]:
+    async def get_all_tools(cls, clients: dict[str, MCPHttpClient]) -> list[Tool]:
         """Collect all tools from all MCP clients."""
         tools: list[Tool] = []
         for client in clients.values():
@@ -24,8 +24,8 @@ class ToolManager:
 
     @classmethod
     async def _find_client_with_tool(
-        cls, clients: dict[str, MCPClient], tool_name: str
-    ) -> Optional[MCPClient]:
+        cls, clients: dict[str, MCPHttpClient], tool_name: str
+    ) -> Optional[MCPHttpClient]:
         for client in clients.values():
             tools = await client.list_tools()
             if any(t.name == tool_name for t in tools):
@@ -35,7 +35,7 @@ class ToolManager:
     @classmethod
     async def execute_tool(
         cls,
-        clients: dict[str, MCPClient],
+        clients: dict[str, MCPHttpClient],
         tool_name: str,
         tool_args: dict,
     ):
