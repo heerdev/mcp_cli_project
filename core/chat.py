@@ -53,6 +53,10 @@ Available tools:
             # Attempt tool call parsing
             try:
                 parsed = json.loads(response_text)
+                if not is_tool_call(parsed):
+                    self.messages.append({"role": "assistant", "content": response_text})
+                    return response_text
+            
                 if not isinstance(parsed, dict):
                     raise ValueError
                 tool_name = parsed.get("tool")
@@ -84,3 +88,11 @@ Available tools:
             )
 
         return "Error: tool execution loop exceeded limit."
+    
+def is_tool_call(obj):
+    return (
+        isinstance(obj, dict)
+        and "tool" in obj
+        and "arguments" in obj
+        and isinstance(obj["arguments"], dict)
+    )
