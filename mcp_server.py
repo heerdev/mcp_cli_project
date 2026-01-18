@@ -70,6 +70,6 @@ def get_spec():
 
 if __name__ == "__main__":
     # Use "stdio" for MCPClient, optional "http" for LocalAI / web clients
-    mcp.run()
+    mcp.run(transport="sse")
     # For HTTP transport (optional), uncomment:
     # mcp.run(transport="sse")

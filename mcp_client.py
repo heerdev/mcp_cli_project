@@ -48,7 +48,13 @@ class MCPStdioClient:
     async def read_resource(self, uri: str):
         result = await self.session.read_resource(uri)
         return result.content
+    async def list_docs(self):
+        result = await self.session.list_resources()
+        return [r.uri for r in result.resources]
 
+    async def get_doc(self, doc_id: str):
+        result = await self.session.read_resource(f"docs://{doc_id}")
+        return result.contents[0].text
 
 class MCPHttpClient:
     """
@@ -170,3 +176,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    

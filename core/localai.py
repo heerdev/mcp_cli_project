@@ -38,3 +38,16 @@ class LocalAILLM:
                 return choice["content"]
 
         return "No text returned"
+
+    async def test_localai(self):
+  
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "Hello, how are you?"},
+            ]
+            response = await self.chat(messages)
+            print("Test response:", response)
+
+    if __name__ == "__main__":
+        llm = LocalAILLM()
+        llm.test_localai()
